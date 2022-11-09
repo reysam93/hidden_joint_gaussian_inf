@@ -113,26 +113,34 @@ def run_exp(id, model, K, g_params, H, M, pert_links):
 
 if __name__ == "__main__":
     np.random.seed(SEED)
-    rhos1 = [.01]  # [.001, .01, .1]
-    rhos2 = [.01]  # [.001, .01, .1, .5]
-    betas1 = [.1]  # [.01, .1, .5]
-    betas2 = [.1]  # [.01, .1, .5]
+    rhos1 = [.01, .05, .1, .5] # [.001, .01, .1]
+    rhos2 = [0]
+    betas1 = [.01, .1, 1, 2.5]
+    betas2 = [0]  # [.01, .1, .5]
 
+# For GL
+# Min mean err (rho1: 0.1, rho2: 0, beta1: 0, beta2: 0): 0.2450
 
-    n_graphs = 1
-    H = 1
+# For GGL
+# Min mean err (rho1: 0.01, rho2: 0.1, beta1: 0, beta2: 0): 0.1960
+
+# For LVGL
+# Min mean err (rho1: 0.05, rho2: 0, beta1: 1, beta2: 0): 0.2188
+
+    n_graphs = 10
+    H = 2
     M = 200
-    K = 3
+    K = 4
     pert_links = 5
 
-    model = MODELS[0]
+    model = MODELS[3]
     g_params = G_PARAMS[1]
 
     t = time.time()
-    print("CPUs used:", N_CPUS)
+    print("CPUs used:", N_CPUS, ', model:', model)
     err = np.zeros((len(rhos1), len(rhos2), len(betas1), len(betas2), n_graphs))
 
-    pool = Parallel(n_jobs=1, verbose=0)
+    pool = Parallel(n_jobs=N_CPUS, verbose=0)
     resps = pool(delayed(run_exp)(i, model, K, g_params, H, M, pert_links) for i in range(n_graphs))
     for i, resp in enumerate(resps):
         err[:,:,:,:,i] = resp
@@ -164,8 +172,5 @@ if __name__ == "__main__":
     # print('Min err (rho1: {:.3g}, rho2: {:.3g}, beta1: {:.3g}, beta2: {:.3g}): {:.4f}'
     #     .format(rhos1[idx[0]], 0, betas1[idx[2]], 0, med_err[idx]))
 
-
-
-    print(mean_err)
 
     np.save('params_tmp', err)
